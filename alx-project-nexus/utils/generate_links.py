@@ -6,6 +6,12 @@ from alx_project_nexus.settings import FRONTEND_URL
 
 
 def generate_email_confirmation_link(user):
+    """
+    Generates a link for email confirmation.
+    This link is used to verify a user's email address after registration.
+    :param user:
+    :return:
+    """
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     token = default_token_generator.make_token(user)
 
@@ -14,6 +20,12 @@ def generate_email_confirmation_link(user):
 
 
 def generate_password_reset_link(user):
+    """
+    Generates a link for password reset.
+    This link is used to reset a user's password.
+    :param user:
+    :return:
+    """
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     token = default_token_generator.make_token(user)
 

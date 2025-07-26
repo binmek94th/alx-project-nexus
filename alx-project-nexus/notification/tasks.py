@@ -8,6 +8,16 @@ from alx_project_nexus.settings import EMAIL_HOST, EMAIL_PORT, EMAIL_HOST_USER, 
 
 @shared_task
 def send_email(subject, message_plain, message_html, recipient_list):
+    """
+    Send an email using SMTP with both plain text and HTML content.
+    This function creates a multipart email message, attaches both plain text and HTML parts,
+    and sends it to the specified recipient list using the SMTP server configured in settings.
+    :param subject:
+    :param message_plain:
+    :param message_html:
+    :param recipient_list:
+    :return:
+    """
     for recipient in recipient_list:
         try:
             email_msg = MIMEMultipart("alternative")

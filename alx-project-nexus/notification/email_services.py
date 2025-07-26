@@ -21,6 +21,14 @@ email_mapping = {
 
 
 def send_email_service(data):
+    """
+    Send email service function to handle email sending with rate limiting. This function validates the input data
+    using the EmailSerializer, checks the rate limit for the email type and recipient, and sends the email if valid.
+    It uses a Redis client to manage rate limiting and Celery to handle the email sending asynchronously. The email
+    templates are defined in the email_mapping dictionary, which maps email types to their respective HTML and text
+    templates.
+    :param data: :return:
+    """
     serializer = EmailSerializer(data=data)
 
     if serializer.is_valid():
