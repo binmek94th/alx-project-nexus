@@ -9,6 +9,7 @@ class User(AbstractUser):
     full_name = models.CharField(max_length=255, blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
     profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
+    email_verified = models.BooleanField(default=False)
 
 
 class Follow(models.Model):
