@@ -1,0 +1,10 @@
+Django~=5.2.4
+django-environ
+django-cors-headers
+djangorestframework
+drf-yasg
+psycopg2
+django-filter
+django-redis
+django-cacheops
+
