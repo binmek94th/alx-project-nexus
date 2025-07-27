@@ -2,11 +2,12 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from user.views import FollowingViewSet, UserViewSet, send_password_reset_email, verify_reset_password_link, \
-    change_password_via_email, resend_email_verification_email, verify_email
+    change_password_via_email, resend_email_verification_email, verify_email, FollowerViewSet
 
 router = DefaultRouter()
 
-router.register('followers', FollowingViewSet, basename='followers')
+router.register('followings', FollowingViewSet, basename='followings')
+router.register('followers', FollowerViewSet, basename='followers')
 router.register('accounts', UserViewSet, basename='accounts')
 
 urlpatterns = [
