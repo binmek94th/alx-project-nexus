@@ -33,7 +33,7 @@ class Post(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     caption = models.TextField()
     author = models.ForeignKey('user.User', on_delete=models.CASCADE, related_name='posts')
-    image = models.ImageField(upload_to='posts/')
+    image = models.ImageField(upload_to='image/posts')
     hashtags = models.ManyToManyField(Hashtag, related_name='posts')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -55,7 +55,7 @@ class Stories(models.Model):
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     caption = models.TextField()
-    image = models.ImageField(upload_to='stories/')
+    image = models.ImageField(upload_to='image/stories/')
     author = models.ForeignKey('user.User', on_delete=models.CASCADE, related_name='stories')
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
