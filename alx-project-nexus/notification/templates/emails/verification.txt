@@ -1,0 +1,30 @@
+Email Verification Required
+
+Hello!
+
+To complete your account setup and ensure security, please verify your email address.
+
+Email to verify: {{ user.email }}
+
+Click the link below to verify your email:
+{{ link }}
+
+IMPORTANT INFORMATION:
+- This verification link will expire in 24 hours
+- Until verified, some account features may be limited
+- Verification helps keep your account secure
+
+If you didn't request this verification, you can safely ignore this email.
+
+Having trouble? Copy and paste the link above into your browser.
+
+Best regards,
+The Team
+
+---
+Your Company Name
+123 Business Street, Suite 100
+City, State 12345
+
+Questions? Contact us at support@yourcompany.com
+© 2024 Your Company Name. All rights reserved.
