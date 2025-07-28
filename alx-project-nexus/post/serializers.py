@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
-from post.models import Post, Hashtag, Like
-from utils.hashtags import extract_hashtags
+from post.models import Post, Hashtag, Like, Comment
+from post.utils.hashtags import extract_hashtags
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -19,6 +19,9 @@ class PostSerializer(serializers.ModelSerializer):
         model = Post
         fields = ('id', 'caption', 'image', 'author', 'created_at', 'updated_at')
         read_only_fields = ('id', 'author', 'created_at', 'updated_at')
+
+    def validate_caption(self, value):
+        return value.lower()
 
     def create(self, validated_data):
         request = self.context.get('request')
@@ -77,8 +80,41 @@ class LikeSerializer(serializers.ModelSerializer):
         post = validated_data.get('post')
         user = self.context['user']
 
-        return Like.objects.create(post=post, user=user)
+        return Like.objects.create(post=post, user=user, type=Like.TypeChoice.POST)
 
 
+class CommentSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Comment model.
+    This serializer is used to represent comments on posts.
+    It includes fields such as post and user.
+    The create method is overridden to handle the creation of comments.
+    """
+    class Meta:
+        model = Comment
+        fields = ('id', 'post', 'created_at', 'comment', 'content')
+        read_only_fields = ['id', 'created_at']
+
+    def create(self, validated_data):
+        user = self.context['user']
+
+        return Comment.objects.create(**validated_data, user=user, type=Like.TypeChoice.POST)
 
 
+class CommentListSerializer(serializers.ModelSerializer):
+    """
+    Serializer for listing comments with nested replies.
+    This serializer is used to represent comments in a tree structure.
+    It includes fields such as id, post, created_at, content, and comment.
+    The children field is a SerializerMethodField that retrieves nested comments.
+    The get_children method uses the CommentListSerializer to serialize child comments.
+    """
+    children = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Comment
+        fields = ('id', 'post', 'created_at', 'content', 'comment', 'children')
+        read_only_fields = ['id', 'created_at']
+
+    def get_children(self, obj):
+        return CommentListSerializer(getattr(obj, "_children", []), many=True, context=self.context).data

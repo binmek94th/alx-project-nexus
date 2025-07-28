@@ -11,8 +11,9 @@ djangorestframework-simplejwt
 httpagentparser~=1.9.5
 redis~=6.2.0
 celery~=5.5.3
+django-mptt~=0.17.0
 
 
 # For development
-django-debug-toolbar
+django-debug-toolbar~=6.0.0
 pytest

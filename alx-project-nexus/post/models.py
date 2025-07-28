@@ -1,4 +1,5 @@
 import uuid
+from mptt.models import MPTTModel, TreeForeignKey
 
 from django.db import models
 
@@ -64,6 +65,11 @@ class Stories(models.Model):
         verbose_name = 'Story'
 
 
+class TypeChoice(models.TextChoices):
+    POST = 'post', 'Post'
+    STORY = 'story', 'Story'
+
+
 class Like(models.Model):
     """
     Represents a like on a post by a user.
@@ -77,6 +83,7 @@ class Like(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='likes')
     user = models.ForeignKey('user.User', on_delete=models.CASCADE, related_name='likes')
     created_at = models.DateTimeField(auto_now_add=True)
+    type = models.CharField(max_length=10, choices=TypeChoice.choices, default=TypeChoice.POST)
 
     class Meta:
         unique_together = ('post', 'user')
@@ -91,13 +98,16 @@ class Comment(models.Model):
     and timestamps for when the comment was created and last updated.
     The Meta class specifies the ordering of comments by creation date in descending order
     and sets a verbose name for the model.
+    nested comments (replies) are supported through a self-referential foreign key.
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
     user = models.ForeignKey('user.User', on_delete=models.CASCADE, related_name='comments')
+    comment = TreeForeignKey('self', null=True, blank=True, related_name='children', on_delete=models.CASCADE)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    type = models.CharField(max_length=10, choices=TypeChoice.choices, default=TypeChoice.POST)
 
     class Meta:
         ordering = ['-created_at']
