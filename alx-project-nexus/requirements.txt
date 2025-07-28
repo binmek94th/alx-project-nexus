@@ -13,9 +13,10 @@ redis~=6.2.0
 celery~=5.5.3
 django-mptt~=0.17.0
 openai~=1.97.1
-django-celery-beat
-
+django-celery-beat~=2.8.1
+graphene-django
 
 # For development
 django-debug-toolbar~=6.0.0
 pytest
+

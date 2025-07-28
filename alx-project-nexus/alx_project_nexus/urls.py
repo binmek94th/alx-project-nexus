@@ -16,6 +16,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.views.decorators.csrf import csrf_exempt
+from graphene_django.views import GraphQLView
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -23,6 +25,7 @@ from rest_framework_simplejwt.views import (
 )
 
 from alx_project_nexus import settings
+from .schema import schema
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -31,6 +34,8 @@ urlpatterns = [
     path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     path('api/user/', include('user.urls')),
     path('api/post/', include('post.urls')),
+    path("graphql/", csrf_exempt(GraphQLView.as_view(graphiql=True, schema=schema))),
+
 ]
 
 
