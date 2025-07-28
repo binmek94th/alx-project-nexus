@@ -16,9 +16,9 @@ from notification.email_services import send_email_service
 from user.models import Follow, User, FollowRequest
 from user.serializers import FollowingSerializer, UserSerializer, UserPasswordSerializer, UserUpdateSerializer, \
     UserEmailSerializer, FollowingListSerializer, FollowerListSerializer, FollowRequestSerializer
-from utils.generate_links import generate_password_reset_link, generate_email_confirmation_link
-from utils.location import get_client_ip, parse_user_agent
-from utils.permission import IsSenderOrReceiver
+from user.utils.generate_links import generate_password_reset_link, generate_email_confirmation_link
+from user.utils.location import get_client_ip, parse_user_agent
+from post.utils.permission import IsSenderOrReceiver
 from utils.redis_client import redis_client
 
 

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from user.models import Follow, User, FollowRequest
-from utils.exception import FollowRequestSent
+from post.utils.exception import FollowRequestSent
 
 
 class UserSerializer(serializers.ModelSerializer):
