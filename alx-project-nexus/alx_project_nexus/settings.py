@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
+    'django_celery_beat',
     'corsheaders',
     'user',
     'post',
@@ -167,6 +168,7 @@ PAGINATION_PER_PAGE = env('PAGINATION_PER_PAGE', default=20, cast=int)
 CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='amqp://guest:guest@localhost:5672//')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
 EMAIL_HOST = env('EMAIL_HOST', default='smtp.gmail.com')
 EMAIL_PORT = env('EMAIL_PORT', default=587, cast=int)
@@ -175,6 +177,8 @@ EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 EMAIL_RATE_LIMIT_WINDOW = env('EMAIL_RATE_LIMIT_WINDOW', default=600, cast=int)
 EMAIL_RATE_LIMIT_MAX = env('EMAIL_RATE_LIMIT_MAX', default=10, cast=int)
 
+
+OPENAI_API_KEY = env('OPENAI_API_KEY')
 
 if ENV == "development":
     INSTALLED_APPS += [

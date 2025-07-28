@@ -1,9 +1,10 @@
+from rest_framework.decorators import action
 from rest_framework.pagination import CursorPagination
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from post.models import Post, Like, Comment
-from post.serializers import PostSerializer, LikeSerializer, CommentSerializer, CommentListSerializer
+from post.models import Post, Like, Comment, Story
+from post.serializers import PostSerializer, LikeSerializer, CommentSerializer, CommentListSerializer, StorySerializer
 from post.utils.handle_private import handle_private_posts
 from post.utils.serialize_comments import build_comment_tree
 
@@ -36,6 +37,50 @@ class PostViewSet(ModelViewSet):
         return context
 
 
+class StoryViewSet(ModelViewSet):
+    """
+    ViewSet for managing stories.
+    This ViewSet provides CRUD operations for the Story model.
+    It allows users to create, retrieve, update, and delete stories.
+    Stories can be filtered by hashtags using the 'hashtag' query parameter.
+    The queryset only includes stories that are not marked as deleted.
+    The serializer used is StorySerializer, which handles the serialization and deserialization of Story instances.
+    The ordering is set to display the most recent stories first.
+    The get_queryset method filters stories based on the 'hashtag' query parameter if provided.
+    """
+    queryset = Story.objects.filter(is_deleted=False)
+    serializer_class = StorySerializer
+    pagination_class = CursorPagination
+
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        hashtag = self.request.query_params.get('hashtag')
+        if hashtag:
+            return (Story.objects.prefetch_related('hashtags').filter(hashtags__name__iexact=hashtag)
+                    .filter(is_deleted=False).filter(is_expired=False))
+        return Story.objects.prefetch_related('hashtags').filter(is_deleted=False).filter(is_expired=False)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
+    @action(detail=False, methods=['get'], url_path='expired_stories')
+    def get_expired(self, request, *args, **kwargs):
+        """
+        Custom action to retrieve expired stories.
+        This action returns all stories that are marked as expired.
+        It can be accessed via the URL /stories/expired_stories/.
+        """
+        user = request.user
+        if not user.is_authenticated:
+            return Response({"detail": "Authentication credentials were not provided."}, status=401)
+        expired_stories = Story.objects.filter(is_expired=True).filter(author=user)
+        serializer = self.get_serializer(expired_stories, many=True)
+        return Response(serializer.data)
+
+
 class LikeViewSet(ModelViewSet):
     """
     ViewSet for managing likes on posts.
@@ -51,6 +96,9 @@ class LikeViewSet(ModelViewSet):
     """
     queryset = Like.objects.all()
     serializer_class = LikeSerializer
+    pagination_class = CursorPagination
+
+    ordering = ['-created_at']
 
     def get_queryset(self):
         post_id = self.request.query_params.get('post_id')
@@ -80,6 +128,9 @@ class CommentViewSet(ModelViewSet):
     """
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
+    pagination_class = CursorPagination
+
+    ordering = ['-created_at']
 
     def get_queryset(self):
         post_id = self.request.query_params.get('post_id')

@@ -1,6 +1,10 @@
+from datetime import timedelta
+
+from django.utils import timezone
 from rest_framework import serializers
 
-from post.models import Post, Hashtag, Like, Comment
+from post.models import Post, Hashtag, Like, Comment, Story
+from post.utils.check_toxicity import is_flagged
 from post.utils.hashtags import extract_hashtags
 
 
@@ -21,6 +25,8 @@ class PostSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'author', 'created_at', 'updated_at')
 
     def validate_caption(self, value):
+        if is_flagged(value):
+            raise serializers.ValidationError("Caption contains toxic content.")
         return value.lower()
 
     def create(self, validated_data):
@@ -42,14 +48,82 @@ class PostSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         request = self.context.get('request')
         image = request.FILES.get('image') if request else None
+        caption = validated_data.get('caption')
 
-        instance.caption = validated_data.get('caption', instance.caption)
+        if caption:
+            instance.caption = caption
+
         if image:
             instance.image = image
 
         instance.save()
 
+        hashtags = extract_hashtags(caption)
+        instance.hashtags.clear()
+        for tag_name in hashtags:
+            tag, _ = Hashtag.objects.get_or_create(name=tag_name.lower())
+            instance.hashtags.add(tag)
+
+        return instance
+
+    def delete(self, instance, validated_data):
+        instance.is_deleted = True
+        instance.save()
+        return instance
+
+
+class StorySerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Story model.
+    This serializer is used to represent story data in the API.
+    It includes fields such as caption, image, author, created_at, and expires_at.
+    The create method is overridden to handle story creation, including extracting hashtags from the caption
+    and setting an expiration time for the story.
+    The update method is overridden to handle story updates, including updating the image and hashtags.
+    The delete method is overridden to mark a story as deleted instead of actually deleting it.
+    """
+    image = serializers.ImageField(required=False, allow_null=True)
+
+    class Meta:
+        model = Story
+        fields = ('id', 'caption', 'image', 'author', 'created_at', 'expires_at')
+        read_only_fields = ('id', 'author', 'created_at', 'expires_at')
+
+    def validate_caption(self, value):
+        if is_flagged(value):
+            raise serializers.ValidationError("Caption contains toxic content.")
+        return value.lower()
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        user = request.user
+        image = request.FILES.get('image') if request else None
+        if not image:
+            raise serializers.ValidationError("Image is required for creating a story.")
+
+        hashtags = extract_hashtags(validated_data['caption'])
+        expires_at = timezone.now() + timedelta(hours=24)
+        story = Story.objects.create(**validated_data, author=user, expires_at=expires_at)
+
+        for tag_name in hashtags:
+            tag, _ = Hashtag.objects.get_or_create(name=tag_name.lower())
+            story.hashtags.add(tag)
+
+        return story
+
+    def update(self, instance, validated_data):
+        request = self.context.get('request')
+        image = request.FILES.get('image') if request else None
         caption = validated_data.get('caption')
+
+        if caption:
+            instance.caption = caption
+
+        if image:
+            instance.image = image
+
+        instance.save()
+
         hashtags = extract_hashtags(caption)
         instance.hashtags.clear()
         for tag_name in hashtags:
@@ -71,6 +145,7 @@ class LikeSerializer(serializers.ModelSerializer):
     It includes fields such as post and user.
     The create method is overridden to handle the creation of likes.
     """
+
     class Meta:
         model = Like
         fields = ('id', 'post', 'created_at')
@@ -90,6 +165,7 @@ class CommentSerializer(serializers.ModelSerializer):
     It includes fields such as post and user.
     The create method is overridden to handle the creation of comments.
     """
+
     class Meta:
         model = Comment
         fields = ('id', 'post', 'created_at', 'comment', 'content')

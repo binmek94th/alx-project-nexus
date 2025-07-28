@@ -44,7 +44,7 @@ class Post(models.Model):
         verbose_name = 'Post'
 
 
-class Stories(models.Model):
+class Story(models.Model):
     """
     Represents a story created by a user.
     Each story has a unique identifier, a caption, an image, an author (user),
@@ -57,8 +57,11 @@ class Stories(models.Model):
     caption = models.TextField()
     image = models.ImageField(upload_to='image/stories/')
     author = models.ForeignKey('user.User', on_delete=models.CASCADE, related_name='stories')
+    hashtags = models.ManyToManyField(Hashtag, related_name='story')
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
+    is_deleted = models.BooleanField(default=False)
+    is_expired = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-created_at']
