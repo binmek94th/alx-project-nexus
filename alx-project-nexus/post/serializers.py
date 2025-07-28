@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from post.models import Post, Hashtag
+from post.models import Post, Hashtag, Like
 from utils.hashtags import extract_hashtags
 
 
@@ -59,3 +59,26 @@ class PostSerializer(serializers.ModelSerializer):
         instance.is_deleted = True
         instance.save()
         return instance
+
+
+class LikeSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Like model.
+    This serializer is used to represent likes on posts.
+    It includes fields such as post and user.
+    The create method is overridden to handle the creation of likes.
+    """
+    class Meta:
+        model = Like
+        fields = ('id', 'post', 'created_at')
+        read_only_fields = ['id', 'created_at']
+
+    def create(self, validated_data):
+        post = validated_data.get('post')
+        user = self.context['user']
+
+        return Like.objects.create(post=post, user=user)
+
+
+
+
