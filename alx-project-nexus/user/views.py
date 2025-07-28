@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 from django.contrib.auth.tokens import default_token_generator
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils.http import urlsafe_base64_decode
 from rest_framework import status
@@ -12,11 +13,12 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from notification.email_services import send_email_service
-from user.models import Follow, User
+from user.models import Follow, User, FollowRequest
 from user.serializers import FollowingSerializer, UserSerializer, UserPasswordSerializer, UserUpdateSerializer, \
-    UserEmailSerializer, FollowingListSerializer, FollowerListSerializer
+    UserEmailSerializer, FollowingListSerializer, FollowerListSerializer, FollowRequestSerializer
 from utils.generate_links import generate_password_reset_link, generate_email_confirmation_link
 from utils.location import get_client_ip, parse_user_agent
+from utils.permission import IsSenderOrReceiver
 from utils.redis_client import redis_client
 
 
@@ -29,6 +31,7 @@ class UserViewSet(ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     pagination_class = CursorSetPagination
+    ordering = ['username']
 
     def get_queryset(self):
         user = self.request.user
@@ -303,3 +306,23 @@ class FollowerViewSet(ModelViewSet):
         if user_id:
             return Follow.objects.select_related('follower', 'following').filter(following__id=user_id)
         return Follow.objects.select_related('follower', 'following').filter(following=self.request.user)
+
+
+class FollowRequestViewSet(ModelViewSet):
+    """
+    A viewset for managing follow requests.
+    This viewset provides actions for sending, accepting, and rejecting follow requests.
+    It allows users to view their pending follow requests and manage them accordingly.
+    """
+    queryset = FollowRequest.objects.all()
+    permission_classes = [IsAuthenticated | IsSenderOrReceiver]
+    serializer_class = FollowRequestSerializer
+    pagination_class = CursorSetPagination
+
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        return FollowRequest.objects.filter(Q(receiver=self.request.user) | Q(sender=self.request.user))
+
+    def get_serializer_context(self):
+        return {'user': self.request.user}

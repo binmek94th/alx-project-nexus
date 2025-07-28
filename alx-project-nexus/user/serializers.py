@@ -1,15 +1,25 @@
 from rest_framework import serializers
 
-from user.models import Follow, User
+from user.models import Follow, User, FollowRequest
+from utils.exception import FollowRequestSent
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the User model.
+    This serializer is used to represent user data in the API.
+    It includes fields such as username, email, full name, email verification status,
+    password, and privacy choice.
+    The password field is set to write-only to ensure it is not exposed in the serialized output
+    The create method is overridden to handle user creation, setting the password and initial active status.
+    The read-only fields include id, is_active, is_staff, and email_verified.
+    """
     password = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'full_name', 'email_verified',
-                  'password', 'is_active', 'is_staff')
+                  'password', 'is_active', 'is_staff', 'privacy_choice', 'bio', 'profile_picture')
         read_only_fields = ('id', 'is_active', 'is_staff', 'email_verified')
 
     def create(self, validated_data):
@@ -23,20 +33,8 @@ class UserSerializer(serializers.ModelSerializer):
 class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'full_name', 'email_verified')
+        fields = ('id', 'username', 'email', 'full_name', 'bio', 'email_verified', 'profile_picture', 'privacy_choice')
         read_only_fields = ('id', 'email_verified')
-
-    def update(self, instance, validated_data):
-        user = self.context['user']
-        if user.is_authenticated and (not user.is_superuser or not user.is_staff):
-            if 'role' in validated_data and validated_data['role'] not in ['viewer', 'talent']:
-                raise serializers.ValidationError(
-                    "You do not have permission to assign this role. Only 'viewer' or 'talent' roles are allowed.")
-        for attr in ['username', 'first_name', 'last_name', 'role']:
-            if attr in validated_data:
-                setattr(instance, attr, validated_data[attr])
-        instance.save()
-        return instance
 
 
 class UserPasswordSerializer(serializers.ModelSerializer):
@@ -71,6 +69,9 @@ class FollowingSerializer(serializers.ModelSerializer):
     """
     Serializer for the Following model.
     This serializer is used to handle the creation and representation of following relationships.
+    if the user is trying to follow a private account, it will create a follow request instead.
+    If the user is trying to follow themselves, it will raise a validation error.
+    If the user is already following the account, it will raise a validation error.
     """
     class Meta:
         model = Follow
@@ -79,9 +80,17 @@ class FollowingSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context['user']
         following_user = validated_data['following']
+        following_user_obj = User.objects.filter(id=following_user.id).first()
 
         if user == following_user:
             raise serializers.ValidationError("You cannot follow yourself.")
+
+        if following_user_obj.privacy_choice == 'private':
+            request_exists = FollowRequest.objects.filter(sender=user, receiver=following_user).exists()
+            if request_exists:
+                raise serializers.ValidationError("Follow request already sent.")
+            FollowRequest.objects.create(sender=user, receiver=following_user)
+            raise FollowRequestSent()
 
         follow, created = Follow.objects.get_or_create(
             follower=user,
@@ -118,3 +127,44 @@ class FollowerListSerializer(serializers.ModelSerializer):
         model = Follow
         fields = ['id', 'follower', 'created_at']
         read_only_fields = ['created_at']
+
+
+class FollowRequestSerializer(serializers.ModelSerializer):
+    """
+    Serializer for handling follow requests.
+    This serializer is used to represent follow requests sent by users to other users.
+    It includes the sender and receiver of the follow request.
+    It also allows updating the follow request to approve or reject it.
+    If the follow request is approved, it creates a follow relationship.
+    If the follow request is rejected, it simply updates the request without creating a follow relationship.
+    The create method is overridden to prevent direct creation of follow requests through this serializer.
+    """
+    sender = UserSerializer(read_only=True)
+
+    class Meta:
+        model = FollowRequest
+        fields = ['id', 'sender', 'created_at', 'is_approved', 'is_rejected']
+        read_only_fields = ['id', 'created_at']
+
+    def create(self, validated_data):
+        raise serializers.ValidationError("Follow requests cannot be created directly. Use the FollowingSerializer "
+                                          "instead.")
+
+    def update(self, instance, validated_data):
+        is_approved = validated_data.get('is_approved')
+        is_rejected = validated_data.get('is_rejected', False)
+        if is_rejected:
+            instance.is_rejected = True
+            instance.save()
+            return instance
+
+        if is_approved is not None:
+            instance.is_approved = is_approved
+            instance.save()
+            if is_approved:
+                Follow.objects.get_or_create(
+                    follower=instance.sender,
+                    following=instance.receiver
+                )
+            return instance
+        raise serializers.ValidationError("Is approved or is rejected field is required for update.")
