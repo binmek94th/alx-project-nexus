@@ -1,3 +1,4 @@
+from rest_framework.pagination import CursorPagination
 from rest_framework.viewsets import ModelViewSet
 
 from post.models import Post
@@ -15,6 +16,9 @@ class PostViewSet(ModelViewSet):
     """
     queryset = Post.objects.filter(is_deleted=False)
     serializer_class = PostSerializer
+    pagination_class = CursorPagination
+
+    ordering = ['-created_at']
 
     def get_queryset(self):
         hashtag = self.request.query_params.get('hashtag')
