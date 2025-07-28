@@ -2,3 +2,5 @@
 .idea
 .venv
 */migrations
+/image
+/.idea
