@@ -3,9 +3,10 @@ from datetime import timedelta
 from django.utils import timezone
 from rest_framework import serializers
 
-from post.models import Post, Hashtag, Like, Comment, Story
+from post.models import Post, Hashtag, Like, Comment, Story, StoryLike
 from post.utils.check_toxicity import is_flagged
 from post.utils.hashtags import extract_hashtags
+from user.serializers import UserSerializer
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -70,6 +71,23 @@ class PostSerializer(serializers.ModelSerializer):
         instance.is_deleted = True
         instance.save()
         return instance
+
+
+class PostListSerializer(serializers.ModelSerializer):
+    """
+    Serializer for listing posts.
+    This serializer is used to represent posts in a list format.
+    It includes fields such as id, caption, image, author, created_at, and updated_at.
+    The author field is a nested serializer that represents the user who created the post.
+    The read_only_fields are set to ensure that certain fields cannot be modified
+    when creating or updating a post.
+    """
+    author = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Post
+        fields = ('id', 'caption', 'image', 'author', 'created_at', 'updated_at')
+        read_only_fields = ('id', 'author', 'created_at', 'updated_at')
 
 
 class StorySerializer(serializers.ModelSerializer):
@@ -138,6 +156,23 @@ class StorySerializer(serializers.ModelSerializer):
         return instance
 
 
+class StoryListSerializer(serializers.ModelSerializer):
+    """
+    Serializer for listing stories.
+    This serializer is used to represent stories in a list format.
+    It includes fields such as id, caption, image, author, created_at, and expires at.
+    The author field is a nested serializer that represents the user who created the story.
+    The read_only_fields are set to ensure that certain fields cannot be modified
+    when creating or updating a story.
+    """
+    author = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Story
+        fields = ('id', 'caption', 'image', 'author', 'created_at', 'expires_at')
+        read_only_fields = ('id', 'author', 'created_at', 'expires_at')
+
+
 class LikeSerializer(serializers.ModelSerializer):
     """
     Serializer for the Like model.
@@ -155,7 +190,27 @@ class LikeSerializer(serializers.ModelSerializer):
         post = validated_data.get('post')
         user = self.context['user']
 
-        return Like.objects.create(post=post, user=user, type=Like.TypeChoice.POST)
+        return Like.objects.create(post=post, user=user)
+
+
+class StoryLikeSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Like model.
+    This serializer is used to represent likes on stories.
+    It includes fields such as story and user.
+    The create method is overridden to handle the creation of likes.
+    """
+
+    class Meta:
+        model = StoryLike
+        fields = ('id', 'story', 'created_at')
+        read_only_fields = ['id', 'created_at']
+
+    def create(self, validated_data):
+        story = validated_data.get('story')
+        user = self.context['user']
+
+        return StoryLike.objects.create(story=story, user=user)
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -174,7 +229,7 @@ class CommentSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context['user']
 
-        return Comment.objects.create(**validated_data, user=user, type=Like.TypeChoice.POST)
+        return Comment.objects.create(**validated_data, user=user)
 
 
 class CommentListSerializer(serializers.ModelSerializer):

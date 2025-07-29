@@ -1,11 +1,13 @@
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import CursorPagination
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from post.models import Post, Like, Comment, Story
-from post.serializers import PostSerializer, LikeSerializer, CommentSerializer, CommentListSerializer, StorySerializer
-from post.utils.handle_private import handle_private_posts
+from post.models import Post, Comment, Story
+from post.serializers import PostSerializer, LikeSerializer, CommentSerializer, CommentListSerializer, StorySerializer, \
+    StoryLikeSerializer, PostListSerializer, StoryListSerializer
+from post.utils.handle_private import generate_like_queryset, generate_comment_queryset
 from post.utils.serialize_comments import build_comment_tree
 
 
@@ -27,14 +29,19 @@ class PostViewSet(ModelViewSet):
     def get_queryset(self):
         hashtag = self.request.query_params.get('hashtag')
         if hashtag:
-            return (Post.objects.prefetch_related('hashtags').filter(hashtags__name__iexact=hashtag)
+            return (Post.objects.prefetch_related('hashtags').select_related('author').filter(hashtags__name__iexact=hashtag)
                     .filter(is_deleted=False))
-        return Post.objects.prefetch_related('hashtags').filter(is_deleted=False)
+        return Post.objects.prefetch_related('hashtags').select_related('author').filter(is_deleted=False)
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['request'] = self.request
         return context
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return PostListSerializer
+        return PostSerializer
 
 
 class StoryViewSet(ModelViewSet):
@@ -57,14 +64,19 @@ class StoryViewSet(ModelViewSet):
     def get_queryset(self):
         hashtag = self.request.query_params.get('hashtag')
         if hashtag:
-            return (Story.objects.prefetch_related('hashtags').filter(hashtags__name__iexact=hashtag)
+            return (Story.objects.prefetch_related('hashtags').select_related('author').filter(hashtags__name__iexact=hashtag)
                     .filter(is_deleted=False).filter(is_expired=False))
-        return Story.objects.prefetch_related('hashtags').filter(is_deleted=False).filter(is_expired=False)
+        return Story.objects.prefetch_related('hashtags').select_related('author').filter(is_deleted=False).filter(is_expired=False)
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['request'] = self.request
         return context
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return StoryListSerializer
+        return StorySerializer
 
     @action(detail=False, methods=['get'], url_path='expired_stories')
     def get_expired(self, request, *args, **kwargs):
@@ -81,29 +93,20 @@ class StoryViewSet(ModelViewSet):
         return Response(serializer.data)
 
 
-class LikeViewSet(ModelViewSet):
-    """
-    ViewSet for managing likes on posts.
-    This ViewSet provides operations to like and unlike posts.
-    It allows users to like a post by sending a POST request with the post ID.
-    Users can also remove their like by sending a DELETE request with the post ID.
-    The queryset only includes likes made by the authenticated user on public posts.
-    The perform_update method is overridden to raise NotImplementedError, as likes cannot be updated.
-    The get_serializer_context method is overridden to include the user in the context.
-    if the 'post_id' query parameter is provided, it filters likes for that specific post.
-    if the author is private, it checks if the user is following the author before returning likes.
-    If not provided, it returns all likes made by the user.
-    """
-    queryset = Like.objects.all()
+class BaseLikeViewSet(ModelViewSet):
     serializer_class = LikeSerializer
     pagination_class = CursorPagination
-
     ordering = ['-created_at']
 
     def get_queryset(self):
-        post_id = self.request.query_params.get('post_id')
+        content_type = self.request.query_params.get('type')
+        content_id = self.request.query_params.get('id')
         user = self.request.user
-        return handle_private_posts(user, Like, post_id)
+
+        if content_type not in ['post', 'story']:
+            raise ValidationError("Missing or invalid 'type' parameter. Must be 'post' or 'story'.")
+
+        return generate_like_queryset(content_type, content_id, user)
 
     def perform_update(self, serializer):
         raise NotImplementedError
@@ -112,6 +115,13 @@ class LikeViewSet(ModelViewSet):
         context = super().get_serializer_context()
         context['user'] = self.request.user
         return context
+
+    def get_serializer_class(self):
+        content_type = self.request.query_params.get('type')
+        if content_type == 'post':
+            return LikeSerializer
+        else:
+            return StoryLikeSerializer
 
 
 class CommentViewSet(ModelViewSet):
@@ -136,11 +146,7 @@ class CommentViewSet(ModelViewSet):
         post_id = self.request.query_params.get('post_id')
         user = self.request.user
 
-        if post_id:
-            return handle_private_posts(user, Comment, post_id).select_related('user', 'comment').order_by('created_at')
-
-        else:
-            return Comment.objects.filter(user=user)
+        return generate_comment_queryset(post_id, user)
 
     def list(self, request, *args, **kwargs):
         post_id = self.request.query_params.get('post_id')

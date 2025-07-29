@@ -68,11 +68,6 @@ class Story(models.Model):
         verbose_name = 'Story'
 
 
-class TypeChoice(models.TextChoices):
-    POST = 'post', 'Post'
-    STORY = 'story', 'Story'
-
-
 class Like(models.Model):
     """
     Represents a like on a post by a user.
@@ -86,10 +81,27 @@ class Like(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='likes')
     user = models.ForeignKey('user.User', on_delete=models.CASCADE, related_name='likes')
     created_at = models.DateTimeField(auto_now_add=True)
-    type = models.CharField(max_length=10, choices=TypeChoice.choices, default=TypeChoice.POST)
 
     class Meta:
         unique_together = ('post', 'user')
+        ordering = ['-created_at']
+
+
+class StoryLike(models.Model):
+    """
+    Represents a like on a story by a user.
+    Each like has a unique identifier, a reference to the story it belongs to,
+    a reference to the user who liked the story, and a timestamp for when the like was created.
+    The unique_together constraint ensures that a user can only like a story once.
+    The Meta class specifies the ordering of likes by creation date in descending order.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    story = models.ForeignKey(Story, on_delete=models.CASCADE, related_name='likes')
+    user = models.ForeignKey('user.User', on_delete=models.CASCADE, related_name='story_likes')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('story', 'user')
         ordering = ['-created_at']
 
 
@@ -110,7 +122,6 @@ class Comment(models.Model):
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    type = models.CharField(max_length=10, choices=TypeChoice.choices, default=TypeChoice.POST)
 
     class Meta:
         ordering = ['-created_at']
