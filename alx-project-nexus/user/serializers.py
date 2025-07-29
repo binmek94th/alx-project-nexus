@@ -96,7 +96,6 @@ class FollowingSerializer(serializers.ModelSerializer):
             follower=user,
             following=following_user
         )
-
         if not created:
             raise serializers.ValidationError("You are already following this user.")
 

@@ -189,6 +189,8 @@ class LikeSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         post = validated_data.get('post')
         user = self.context['user']
+        if Like.objects.filter(post=post, user=user).exists():
+            raise serializers.ValidationError("You already liked this post.")
 
         return Like.objects.create(post=post, user=user)
 
@@ -209,6 +211,8 @@ class StoryLikeSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         story = validated_data.get('story')
         user = self.context['user']
+        if StoryLike.objects.filter(story=story, user=user).exists():
+            raise serializers.ValidationError("You already liked this story.")
 
         return StoryLike.objects.create(story=story, user=user)
 

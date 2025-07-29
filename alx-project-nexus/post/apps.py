@@ -8,6 +8,7 @@ class PostConfig(AppConfig):
     name = 'post'
 
     def ready(self):
-        if os.environ.get('RUN_MAIN') == 'true':
-            from .beat_setup import create_periodic_task
-            create_periodic_task()
+        # if os.environ.get('RUN_MAIN') == 'true':
+        #     from .beat_setup import create_periodic_task
+        #     create_periodic_task()
+        import post.signals
