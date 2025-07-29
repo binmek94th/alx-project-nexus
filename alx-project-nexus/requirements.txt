@@ -21,8 +21,7 @@ asgiref~=3.9.1
 channels~=3.0.5
 PyJWT~=2.10.1
 
-
 # For development
 django-debug-toolbar~=6.0.0
-pytest
+pytest-django
 

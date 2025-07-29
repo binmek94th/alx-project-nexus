@@ -68,7 +68,8 @@ class Query(graphene.ObjectType):
     all_posts = DjangoFilterConnectionField(PostType, filterset_class=PostFilterSet)
 
     def resolve_all_posts(root, info, **kwargs):
-        return Post.objects.select_related("author").all()
+        return (Post.objects.select_related("author").
+                filter(author__privacy_choice=User.PrivacyChoice.PUBLIC, is_deleted=False))
 
 
 schema = graphene.Schema(query=Query)

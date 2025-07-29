@@ -8,7 +8,7 @@ router = DefaultRouter()
 
 router.register('followings', FollowingViewSet, basename='followings')
 router.register('followers', FollowerViewSet, basename='followers')
-router.register('accounts', UserViewSet, basename='accounts')
+router.register('users', UserViewSet, basename='users')
 router.register('follow_requests', FollowRequestViewSet, basename='follow_requests')
 
 urlpatterns = [

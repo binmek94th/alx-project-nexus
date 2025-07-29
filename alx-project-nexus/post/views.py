@@ -9,6 +9,7 @@ from post.serializers import PostSerializer, LikeSerializer, CommentSerializer, 
     StoryLikeSerializer, PostListSerializer, StoryListSerializer
 from post.utils.handle_private import generate_like_queryset, generate_comment_queryset
 from post.utils.serialize_comments import build_comment_tree
+from user.models import PrivacyChoice
 
 
 class PostViewSet(ModelViewSet):
@@ -30,8 +31,9 @@ class PostViewSet(ModelViewSet):
         hashtag = self.request.query_params.get('hashtag')
         if hashtag:
             return (Post.objects.prefetch_related('hashtags').select_related('author').filter(hashtags__name__iexact=hashtag)
-                    .filter(is_deleted=False))
-        return Post.objects.prefetch_related('hashtags').select_related('author').filter(is_deleted=False)
+                    .filter(is_deleted=False).filter(author__privacy_choice="public"))
+        return (Post.objects.prefetch_related('hashtags').select_related('author').filter(is_deleted=False)
+                .filter(author__privacy_choice="public"))
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -65,8 +67,9 @@ class StoryViewSet(ModelViewSet):
         hashtag = self.request.query_params.get('hashtag')
         if hashtag:
             return (Story.objects.prefetch_related('hashtags').select_related('author').filter(hashtags__name__iexact=hashtag)
-                    .filter(is_deleted=False).filter(is_expired=False))
-        return Story.objects.prefetch_related('hashtags').select_related('author').filter(is_deleted=False).filter(is_expired=False)
+                    .filter(is_deleted=False).filter(is_expired=False).filter(author__privacy_choice="public"))
+        return (Story.objects.prefetch_related('hashtags').select_related('author').filter(is_deleted=False)
+                .filter(is_expired=False).filter(author__privacy_choice="public"))
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
