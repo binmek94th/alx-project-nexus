@@ -26,7 +26,7 @@ class UserType(DjangoObjectType):
     class Meta:
         model = User
         interfaces = (relay.Node,)
-        fields = ("id", "username", "profile_picture", "bio", "created_at")
+        fields = ("id", "username", "profile_picture", "bio")
 
 
 class PostType(DjangoObjectType):
@@ -45,7 +45,7 @@ class PostType(DjangoObjectType):
     class Meta:
         model = Post
         interfaces = (relay.Node,)
-        fields = ("id", "title", "caption", "image", "author", "created_at")
+        fields = ("id", "caption", "image", "author", "created_at")
 
     def resolve_like_count(self, info):
         return Like.objects.filter(post_id=self.id).count()
