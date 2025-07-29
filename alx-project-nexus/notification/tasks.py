@@ -4,6 +4,7 @@ from email.mime.text import MIMEText
 from celery import shared_task
 
 from alx_project_nexus.settings import EMAIL_HOST, EMAIL_PORT, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD
+from notification.notification_service import send_notification
 
 
 @shared_task
@@ -38,3 +39,27 @@ def send_email(subject, message_plain, message_html, recipient_list):
 
         except Exception as e:
             print(f"Failed to send email: {e}")
+
+
+@shared_task
+def create_notification(user_id, message, notification_type=None):
+    """
+    Creates a new notification for a specific user.
+
+    Args: to create the notification for.
+        message (str): The content of the n
+        user_id (uuid): The ID of the userotification.
+        notification_type (str, optional): The type of the notification. Defaults to None.
+
+    Returns:
+        Notification: The created notification instance.
+    """
+    from notification.models import Notification
+
+    notification = Notification.objects.create(
+        user_id=user_id,
+        message=message,
+        notification_type=notification_type
+    )
+    send_notification(user_id)
+    return notification

@@ -34,6 +34,7 @@ urlpatterns = [
     path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     path('api/user/', include('user.urls')),
     path('api/post/', include('post.urls')),
+    path('api/notification/', include('notification.urls')),
     path("graphql/", csrf_exempt(GraphQLView.as_view(graphiql=True, schema=schema))),
 
 ]

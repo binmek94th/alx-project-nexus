@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'graphene_django',
     'corsheaders',
+    'daphne',
     'user',
     'post',
     'notification'
@@ -179,7 +180,14 @@ EMAIL_RATE_LIMIT_WINDOW = env('EMAIL_RATE_LIMIT_WINDOW', default=600, cast=int)
 EMAIL_RATE_LIMIT_MAX = env('EMAIL_RATE_LIMIT_MAX', default=10, cast=int)
 
 
-OPENAI_API_KEY = env('OPENAI_API_KEY')
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}
 
 if ENV == "development":
     INSTALLED_APPS += [
