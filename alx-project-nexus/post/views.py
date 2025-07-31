@@ -9,7 +9,6 @@ from post.serializers import PostSerializer, LikeSerializer, CommentSerializer, 
     StoryLikeSerializer, PostListSerializer, StoryListSerializer
 from post.utils.handle_private import generate_like_queryset, generate_comment_queryset
 from post.utils.serialize_comments import build_comment_tree
-from user.models import PrivacyChoice
 
 
 class PostViewSet(ModelViewSet):
@@ -80,6 +79,18 @@ class StoryViewSet(ModelViewSet):
         if self.action == 'list':
             return StoryListSerializer
         return StorySerializer
+
+    @action(detail=True, methods=['get'], url_path='get_image')
+    def get_story_image(self, request, *args, **kwargs):
+        """
+        Custom action to retrieve the image of a specific story.
+        This action returns the image of the story identified by the 'pk' parameter.
+        It can be accessed via the URL /stories/{pk}/expired_stories/.
+        """
+        story = self.get_object()
+        if story.is_expired:
+            return Response({"detail": "This story is expired."}, status=400)
+        return Response({"image": story.image.url}, status=200)
 
     @action(detail=False, methods=['get'], url_path='expired_stories')
     def get_expired(self, request, *args, **kwargs):
