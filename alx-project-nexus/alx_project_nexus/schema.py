@@ -1,8 +1,9 @@
 import graphene
 import post.schema
+import user.schema
 
 
-class Query(post.schema.Query, graphene.ObjectType):
+class Query(post.schema.Query, user.schema.Query, graphene.ObjectType):
     pass
 
 
