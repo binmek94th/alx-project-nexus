@@ -169,7 +169,7 @@ class StoryListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Story
-        fields = ('id', 'caption', 'image', 'author', 'created_at', 'expires_at')
+        fields = ('id', 'caption', 'author', 'created_at', 'expires_at')
         read_only_fields = ('id', 'author', 'created_at', 'expires_at')
 
 
