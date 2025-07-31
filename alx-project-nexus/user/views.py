@@ -70,6 +70,8 @@ class UserViewSet(ModelViewSet):
     @action(detail=False, methods=['put', 'patch'], url_path='update-password')
     def update_password(self, request, *args, **kwargs):
         user = request.user
+        if not user.is_authenticated:
+            return Response({"error": "Authentication credentials were not provided."}, status=status.HTTP_403_FORBIDDEN)
         serializer = UserPasswordSerializer(instance=user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -109,6 +111,8 @@ class UserViewSet(ModelViewSet):
     def update_account(self, request, *args, **kwargs):
         user_id = request.query_params.get('id')
         user = request.user
+        if not user.is_authenticated:
+            return Response({"error": "Authentication credentials were not provided."}, status=status.HTTP_403_FORBIDDEN)
         if (user.is_superuser or user.is_staff) and user_id:
             user = User.objects.get(id=user_id)
         serializer = UserUpdateSerializer(instance=user, data=request.data, partial=True, context={'user': user})

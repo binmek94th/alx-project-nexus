@@ -1,0 +1,5 @@
+analytics
+post recommendation
+
+> $env:DJANGO_SETTINGS_MODULE="alx_project_nexus.settings"
+> daphne -b 0.0.0.0 -p 8500 alx_project_nexus.asgi:application
