@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import CursorPagination
@@ -9,6 +10,7 @@ from post.serializers import PostSerializer, LikeSerializer, CommentSerializer, 
     StoryLikeSerializer, PostListSerializer, StoryListSerializer
 from post.utils.handle_private import generate_like_queryset, generate_comment_queryset
 from post.utils.serialize_comments import build_comment_tree
+from user.models import User, PrivacyChoice
 
 
 class PostViewSet(ModelViewSet):
@@ -27,12 +29,22 @@ class PostViewSet(ModelViewSet):
     ordering = ['-created_at']
 
     def get_queryset(self):
+        user = self.request.user
         hashtag = self.request.query_params.get('hashtag')
+
+        base_filter = Q(author__privacy_choice=PrivacyChoice.PUBLIC)
+
+        if user.is_authenticated:
+            base_filter |= Q(author__in=User.objects.filter(followers__follower=user))
+
+        queryset = Post.objects.prefetch_related('hashtags').select_related('author').filter(
+            is_deleted=False
+        ).filter(base_filter)
+
         if hashtag:
-            return (Post.objects.prefetch_related('hashtags').select_related('author').filter(hashtags__name__iexact=hashtag)
-                    .filter(is_deleted=False).filter(author__privacy_choice="public"))
-        return (Post.objects.prefetch_related('hashtags').select_related('author').filter(is_deleted=False)
-                .filter(author__privacy_choice="public"))
+            queryset = queryset.filter(hashtags__name__iexact=hashtag)
+
+        return queryset
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -63,12 +75,22 @@ class StoryViewSet(ModelViewSet):
     ordering = ['-created_at']
 
     def get_queryset(self):
+        user = self.request.user
         hashtag = self.request.query_params.get('hashtag')
+
+        base_filter = Q(author__privacy_choice=PrivacyChoice.PUBLIC)
+
+        if user.is_authenticated:
+            base_filter |= Q(author__in=User.objects.filter(followers__follower=user))
+
+        queryset = Story.objects.prefetch_related('hashtags').select_related('author').filter(
+            is_deleted=False
+        ).filter(base_filter)
+
         if hashtag:
-            return (Story.objects.prefetch_related('hashtags').select_related('author').filter(hashtags__name__iexact=hashtag)
-                    .filter(is_deleted=False).filter(is_expired=False).filter(author__privacy_choice="public"))
-        return (Story.objects.prefetch_related('hashtags').select_related('author').filter(is_deleted=False)
-                .filter(is_expired=False).filter(author__privacy_choice="public"))
+            queryset = queryset.filter(hashtags__name__iexact=hashtag)
+
+        return queryset
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

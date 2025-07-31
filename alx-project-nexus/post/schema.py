@@ -1,11 +1,12 @@
 import django_filters
 import graphene
+from django.db.models import Q
 from graphene import relay
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 
 from .models import Post, Like, Comment
-from user.models import User
+from user.models import User, PrivacyChoice
 
 
 class PostFilterSet(django_filters.FilterSet):
@@ -68,8 +69,16 @@ class Query(graphene.ObjectType):
     all_posts = DjangoFilterConnectionField(PostType, filterset_class=PostFilterSet)
 
     def resolve_all_posts(root, info, **kwargs):
-        return (Post.objects.select_related("author").
-                filter(author__privacy_choice=User.PrivacyChoice.PUBLIC, is_deleted=False))
+        user = info.context.user
+
+        base_filter = Q(author__privacy_choice=PrivacyChoice.PUBLIC)
+
+        if user.is_authenticated:
+            base_filter |= Q(author__in=User.objects.filter(followers__follower=user))
+
+        return Post.objects.select_related('author').filter(
+            is_deleted=False
+        ).filter(base_filter)
 
 
 schema = graphene.Schema(query=Query)
