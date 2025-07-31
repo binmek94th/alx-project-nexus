@@ -73,7 +73,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: '3.9'
 
       - name: Install dependencies
         run: |
@@ -88,9 +88,12 @@ jobs:
 
       - name: Make migrations
         run: |
+          python manage.py makemigrations user
+          python manage.py makemigrations post
+          python manage.py makemigrations notification
           python manage.py makemigrations
           python manage.py migrate
 
       - name: Run tests
         run: |
-          pytest tests/
+          pytest 
