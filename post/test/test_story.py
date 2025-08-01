@@ -69,4 +69,4 @@ def test_get_story(logged_in_client, created_post):
     response = logged_in_client.get(reverse("stories-list"))
     print(response.data)
     assert response.status_code == 200
-    assert response.data['results'].count() == 1
+    assert response.data['results'].len() == 1

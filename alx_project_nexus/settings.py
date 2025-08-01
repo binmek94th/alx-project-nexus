@@ -38,6 +38,8 @@ ALLOWED_HOSTS = []
 
 # Application definition
 
+ASGI_APPLICATION = "alx_project_nexus.asgi.application"
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',

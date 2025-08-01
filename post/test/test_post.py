@@ -68,4 +68,4 @@ def test_delete_post(created_post, logged_in_client):
 def test_get_posts(logged_in_client, created_post):
     response = logged_in_client.get(reverse("posts-list"))
     assert response.status_code == 200
-    assert response.data['results'].count() == 1
+    assert response.data['results'].len() == 1
