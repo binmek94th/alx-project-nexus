@@ -26,6 +26,8 @@ django-celery-beat~=2.5.0
 
 # GraphQL
 graphene-django~=3.2.3
+graphene-file-upload
+
 
 # Channels & WebSockets
 asgiref~=3.8.1

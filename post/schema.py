@@ -1,9 +1,15 @@
+import base64
+import uuid
+
 import django_filters
 import graphene
+from django.core.files.base import ContentFile
 from django.db.models import Q
 from graphene import relay
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
+from graphene_file_upload.scalars import Upload
+from graphql import GraphQLError
 
 from .models import Post, Like, Comment, Story
 from user.models import User, PrivacyChoice
@@ -68,6 +74,69 @@ class PostType(DjangoObjectType):
         return self.author
 
 
+class PostInput(graphene.InputObjectType):
+    caption = graphene.String(required=True)
+
+
+class CreatePost(graphene.Mutation):
+    class Arguments:
+        input = PostInput(required=True)
+        image = Upload(required=True)
+
+    post = graphene.Field(PostType)
+
+    def mutate(self, info, input, image):
+        user = info.context.user
+        if not user.is_authenticated:
+            raise Exception("Authentication required")
+
+        post = Post.objects.create(
+            caption=input.caption,
+            image=image,
+            author=user
+        )
+        return CreatePost(post=post)
+
+
+class UpdatePost(graphene.Mutation):
+    class Arguments:
+        id = graphene.ID(required=True)
+        caption = graphene.String(required=False)
+        image = Upload(required=False)  # only if using file upload
+
+    post = graphene.Field(PostType)
+
+    def mutate(self, info, id, caption=None, image=None):
+        try:
+            post = Post.objects.get(pk=id)
+        except Post.DoesNotExist:
+            raise GraphQLError("Post not found.")
+
+        if caption:
+            post.caption = caption
+        if image:
+            post.image = image
+
+        post.save()
+        return UpdatePost(post=post)
+
+
+class DeletePost(graphene.Mutation):
+    class Arguments:
+        id = graphene.ID(required=True)
+
+    ok = graphene.Boolean()
+
+    def mutate(self, info, id):
+        try:
+            post = Post.objects.get(pk=id)
+            post.is_deleted = True
+            post.save()
+            return DeletePost(ok=True)
+        except Post.DoesNotExist:
+            raise GraphQLError("Post not found.")
+
+
 class StoryType(DjangoObjectType):
     """
     GraphQL type for Story model.
@@ -125,4 +194,10 @@ class Query(graphene.ObjectType):
         )
 
 
-schema = graphene.Schema(query=Query)
+class Mutation(graphene.ObjectType):
+    create_post = CreatePost.Field()
+    update_post = UpdatePost.Field()
+    delete_post = DeletePost.Field()
+
+
+schema = graphene.Schema(query=Query, mutation=Mutation)
