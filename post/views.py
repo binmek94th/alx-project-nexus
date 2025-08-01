@@ -1,7 +1,7 @@
 from django.db.models import Q
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
-from rest_framework.pagination import CursorPagination
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
@@ -11,6 +11,7 @@ from post.serializers import PostSerializer, LikeSerializer, CommentSerializer, 
 from post.utils.handle_private import generate_like_queryset, generate_comment_queryset
 from post.utils.serialize_comments import build_comment_tree
 from user.models import User, PrivacyChoice
+from utils.pagination import CursorSetPagination
 
 
 class PostViewSet(ModelViewSet):
@@ -24,7 +25,7 @@ class PostViewSet(ModelViewSet):
     """
     queryset = Post.objects.filter(is_deleted=False)
     serializer_class = PostSerializer
-    pagination_class = CursorPagination
+    pagination_class = CursorSetPagination
 
     ordering = ['-created_at']
 
@@ -56,6 +57,21 @@ class PostViewSet(ModelViewSet):
             return PostListSerializer
         return PostSerializer
 
+    def perform_destroy(self, instance):
+        instance.is_deleted = True
+        instance.save()
+        return instance
+
+    def get_permissions(self):
+        """
+        Custom permission logic to allow only authenticated users to create posts.
+        """
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            self.permission_classes = [IsAuthenticated]
+        else:
+            self.permission_classes = [AllowAny]
+        return super().get_permissions()
+
 
 class StoryViewSet(ModelViewSet):
     """
@@ -70,7 +86,7 @@ class StoryViewSet(ModelViewSet):
     """
     queryset = Story.objects.filter(is_deleted=False)
     serializer_class = StorySerializer
-    pagination_class = CursorPagination
+    pagination_class = CursorSetPagination
 
     ordering = ['-created_at']
 
@@ -102,6 +118,21 @@ class StoryViewSet(ModelViewSet):
             return StoryListSerializer
         return StorySerializer
 
+    def get_permissions(self):
+        """
+        Custom permission logic to allow only authenticated users to create posts.
+        """
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            self.permission_classes = [IsAuthenticated]
+        else:
+            self.permission_classes = [AllowAny]
+        return super().get_permissions()
+
+    def perform_destroy(self, instance):
+        instance.is_deleted = True
+        instance.save()
+        return instance
+
     @action(detail=True, methods=['get'], url_path='get_image')
     def get_story_image(self, request, *args, **kwargs):
         """
@@ -131,7 +162,7 @@ class StoryViewSet(ModelViewSet):
 
 class BaseLikeViewSet(ModelViewSet):
     serializer_class = LikeSerializer
-    pagination_class = CursorPagination
+    pagination_class = CursorSetPagination
     ordering = ['-created_at']
 
     def get_queryset(self):
@@ -139,7 +170,7 @@ class BaseLikeViewSet(ModelViewSet):
         content_id = self.request.query_params.get('id')
         user = self.request.user
 
-        if content_type not in ['post', 'story']:
+        if not content_type or content_type not in ['post', 'story']:
             raise ValidationError("Missing or invalid 'type' parameter. Must be 'post' or 'story'.")
 
         return generate_like_queryset(content_type, content_id, user)
@@ -159,6 +190,16 @@ class BaseLikeViewSet(ModelViewSet):
         else:
             return StoryLikeSerializer
 
+    def get_permissions(self):
+        """
+        Custom permission logic to allow only authenticated users to create posts.
+        """
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            self.permission_classes = [IsAuthenticated]
+        else:
+            self.permission_classes = [AllowAny]
+        return super().get_permissions()
+
 
 class CommentViewSet(ModelViewSet):
     """
@@ -174,7 +215,7 @@ class CommentViewSet(ModelViewSet):
     """
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    pagination_class = CursorPagination
+    pagination_class = CursorSetPagination
 
     ordering = ['-created_at']
 
@@ -207,3 +248,13 @@ class CommentViewSet(ModelViewSet):
 
     def perform_destroy(self, instance):
         raise NotImplementedError
+
+    def get_permissions(self):
+        """
+        Custom permission logic to allow only authenticated users to create posts.
+        """
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            self.permission_classes = [IsAuthenticated]
+        else:
+            self.permission_classes = [AllowAny]
+        return super().get_permissions()

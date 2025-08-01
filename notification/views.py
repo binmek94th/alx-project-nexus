@@ -21,3 +21,6 @@ class NotificationViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         raise NotImplementedError
+
+    def perform_destroy(self, instance):
+        raise NotImplementedError
