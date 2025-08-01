@@ -65,8 +65,7 @@ def test_delete_story(created_story, logged_in_client):
 
 
 @pytest.mark.django_db
-def test_get_story(logged_in_client, created_post):
+def test_get_story(logged_in_client, created_story):
     response = logged_in_client.get(reverse("stories-list"))
-    print(response.data)
     assert response.status_code == 200
-    assert response.data['results'].len() == 1
+    assert len(response.data['results']) == 1
