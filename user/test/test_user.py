@@ -10,7 +10,6 @@ from user.models import User
 @pytest.mark.django_db
 def test_user_registration(client, setup_users):
     response = client.post(reverse('users-list'), setup_users)
-    print(response.data)
     assert response.status_code == 201
     assert response.data["username"] == setup_users["username"]
     assert response.data["email"] == setup_users["email"]
