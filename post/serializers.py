@@ -16,7 +16,6 @@ class PostSerializer(serializers.ModelSerializer):
     It includes fields such as caption, image, author, created_at, and updated_at.
     The create method is overridden to handle post creation, including extracting hashtags from the caption.
     The update method is overridden to handle post updates, including updating the image and hashtags.
-    The delete method is overridden to mark a post as deleted instead of actually deleting it.
     """
     image = serializers.ImageField(required=False, allow_null=True)
 
@@ -67,11 +66,6 @@ class PostSerializer(serializers.ModelSerializer):
 
         return instance
 
-    def delete(self, instance, validated_data):
-        instance.is_deleted = True
-        instance.save()
-        return instance
-
 
 class PostListSerializer(serializers.ModelSerializer):
     """
@@ -98,7 +92,6 @@ class StorySerializer(serializers.ModelSerializer):
     The create method is overridden to handle story creation, including extracting hashtags from the caption
     and setting an expiration time for the story.
     The update method is overridden to handle story updates, including updating the image and hashtags.
-    The delete method is overridden to mark a story as deleted instead of actually deleting it.
     """
     image = serializers.ImageField(required=False, allow_null=True)
 
@@ -148,11 +141,6 @@ class StorySerializer(serializers.ModelSerializer):
             tag, _ = Hashtag.objects.get_or_create(name=tag_name.lower())
             instance.hashtags.add(tag)
 
-        return instance
-
-    def delete(self, instance, validated_data):
-        instance.is_deleted = True
-        instance.save()
         return instance
 
 
