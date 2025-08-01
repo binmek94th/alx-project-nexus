@@ -102,7 +102,13 @@ Feel free to explore, fork, or reach out!
 ---
 ## 💎 Repository Structure
 - 📁 alx-project-nexus/
-- 📄 README.md # This documentation file
+- 📁 notification
+- 📁 post
+- 📁 user
+- 📁 utils
+- 📄 manage.py
+- 📄 requirements.txt 
+- 📄 README.md 
 
 ## 📬 Contact
 
