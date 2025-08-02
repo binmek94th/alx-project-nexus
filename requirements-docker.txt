@@ -9,7 +9,7 @@ django-environ~=0.11.2
 django-cors-headers~=4.3.1
 
 # Database
-psycopg2~=2.9.9
+psycopg2-binary~=2.9.7
 django-redis~=5.4.0
 django-cacheops~=7.0.0
 
@@ -44,4 +44,8 @@ pillow
 # Development & Testing
 django-debug-toolbar~=4.3.0
 pytest-django~=4.8.0
+
+
+# Production & Deployment
+gunicorn~=21.2.0
 uvicorn

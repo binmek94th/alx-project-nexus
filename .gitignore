@@ -4,3 +4,5 @@
 */migrations
 /image
 /.idea
+.env
+/static
