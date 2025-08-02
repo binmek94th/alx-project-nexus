@@ -3,8 +3,13 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-WORKDIR /app
+# Copy the entrypoint script
+COPY entrypoint.sh /app/entrypoint.sh
 
+# Make it executable
+RUN chmod +x /app/entrypoint.sh
+
+WORKDIR /app
 
 COPY requirements-docker.txt .
 RUN pip install --upgrade pip && pip install -v -r requirements-docker.txt
