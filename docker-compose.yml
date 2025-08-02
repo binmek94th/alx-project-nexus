@@ -34,7 +34,13 @@ services:
     build: .
     environment:
       - DATABASE_URL=postgres://postgres:1qaz2wsx@db:5432/social_media
-    entrypoint: ./entrypoint.sh
+    command: >
+        sh -c "python manage.py makemigrations user &&
+               python manage.py makemigrations post &&
+               python manage.py makemigrations notification &&      
+               python manage.py migrate &&
+               python manage.py collectstatic --noinput &&
+               uvicorn alx_project_nexus.asgi:application --host 0.0.0.0 --port 8000"
     volumes:
       - .:/app
       - staticfiles:/app/staticfiles

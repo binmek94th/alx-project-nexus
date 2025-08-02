@@ -201,6 +201,37 @@ CHANNEL_LAYERS = {
     },
 }
 
+# CACHEOPS_REDIS = {
+#     'host': 'localhost',
+#     'port': 6379,
+#     'db': 2,
+# }
+#
+# CACHEOPS = {
+#     'contentDB.genre': {'ops': 'all', 'timeout': 60*5},
+#     'contentDB.production': {'ops': 'all', 'timeout': 60*5},
+#     'contentDB.content': {'ops': 'all', 'timeout': 60*5},
+#     'contentDB.language': {'ops': 'all', 'timeout': 60*5},
+#     'contentDB.tags': {'ops': 'all', 'timeout': 60*5},
+#     'contentDB.theme': {'ops': 'all', 'timeout': 60*5},
+#     'contentDB.role': {'ops': 'all', 'timeout': 60*5},
+#     'contentDB.star': {'ops': 'all', 'timeout': 60*5},
+#     'contentDB.series': {'ops': 'all', 'timeout': 60*5},
+#     'contentDB.episode': {'ops': 'all', 'timeout': 60*5},
+#     'contentDB.sequel': {'ops': 'all', 'timeout': 60*5},
+#     'contentDB.contentrole': {'ops': 'all', 'timeout': 60*5},
+#     'contentDB.theatremovies': {'ops': 'all', 'timeout': 60*5},
+#     'contentDB.theatre': {'ops': 'all', 'timeout': 60*5},
+#     'award.awardcategory': {'ops': 'all', 'timeout': 60*5},
+#     'award.awardevent': {'ops': 'all', 'timeout': 60*5},
+#     'award.award': {'ops': 'all', 'timeout': 60*5},
+#     'person.person': {'ops': 'all', 'timeout': 60*5},
+#     'news.newspost': {'ops': 'all', 'timeout': 60*5},
+# }
+
+SWAGGER_USE_COMPAT_RENDERERS = False
+
+
 if ENV == "development":
     INSTALLED_APPS += [
         "debug_toolbar",

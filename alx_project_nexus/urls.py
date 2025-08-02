@@ -20,6 +20,7 @@ from django.urls import path, include
 from django.views.decorators.csrf import csrf_exempt
 from graphene_django.views import GraphQLView
 from graphene_file_upload.django import FileUploadGraphQLView
+from rest_framework import permissions
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -40,11 +41,28 @@ urlpatterns = [
     path("graphql/", csrf_exempt(FileUploadGraphQLView.as_view(graphiql=True, schema=schema))),
 
 ]
-
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
     import debug_toolbar
+    from drf_yasg.views import get_schema_view
+    from drf_yasg import openapi
+
+    schema_view = get_schema_view(
+        openapi.Info(
+            title="ZNAR MOVIE DB",
+            default_version='v1',
+            description="API documentation",
+            terms_of_service="https://www.google.com/policies/terms/",
+            contact=openapi.Contact(email="you@example.com"),
+            license=openapi.License(name="BSD License"),
+        ),
+        public=True,
+        permission_classes=[permissions.AllowAny],
+    )
+
     urlpatterns += [
+        path('admin', admin.site.urls),
         path('__debug__/', include(debug_toolbar.urls)),
+        path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     ]
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
