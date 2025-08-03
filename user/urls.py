@@ -14,7 +14,7 @@ router.register('follow_requests', FollowRequestViewSet, basename='follow_reques
 urlpatterns = [
     path('password-reset-link/', send_password_reset_email, name='password_reset_email'),
     path('verify-password-reset-link/', verify_reset_password_link, name='verify_reset_password_link'),
-    path('change-password-reset-link/', change_password_via_email, name='change_password_reset_link'),
+    path('change-password-reset/', change_password_via_email, name='change_password_reset_link'),
     path("resend_email_verification_email/", resend_email_verification_email,
          name="resend_email_verification_email"),
     path("verify_email/", verify_email, name="verify_email"),

@@ -164,7 +164,7 @@ REST_FRAMEWORK = {
     ],
 }
 
-FRONTEND_URL = ''
+FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:5173")
 
 REDIS_URL = env('REDIS_URL', default='redis://localhost:6379/0')
 

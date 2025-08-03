@@ -74,8 +74,8 @@ def test_update_user_invalid(active_created_user, setup_users, logged_in_client,
 def test_update_user_no_login(active_created_user, setup_users, client):
     response = client.put("/api/user/users/update-account/",
                           {"full_name": "updated_user"})
-    assert response.status_code == 403
-    assert response.data["error"] == "Authentication credentials were not provided."
+    assert response.status_code == 401
+    assert response.data["detail"] == "Authentication credentials were not provided."
     assert User.objects.all()[0].full_name == "Test User"
 
 
@@ -93,8 +93,8 @@ def test_update_password(active_created_user, setup_users, logged_in_client, cli
 def test_update_password_no_login(active_created_user, setup_users, client):
     password = User.objects.all()[0].password
     response = client.put("/api/user/users/update-password/", {"password": "new_password"})
-    assert response.status_code == 403
-    assert response.data["error"] == "Authentication credentials were not provided."
+    assert response.status_code == 401
+    assert response.data["detail"] == "Authentication credentials were not provided."
     assert User.objects.all()[0].password == password
 
 
@@ -143,8 +143,7 @@ def test_change_password_via_email(client, active_created_user):
     uid = urlsafe_base64_encode(force_bytes(active_created_user.pk))
     token = default_token_generator.make_token(active_created_user)
     url = reverse("change_password_reset_link") + f"?uid={uid}&token={token}"
-    response = client.post(url, {"password": "newpassword123"})
-    print(response.data)
+    response = client.post(url, {"uid": uid, "token": token, "password": "newpassword123"})
     assert response.status_code == 200
 
 

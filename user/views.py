@@ -34,10 +34,12 @@ class UserViewSet(ModelViewSet):
     ordering = ['username']
 
     def get_queryset(self):
-        user = self.request.user
-        if user.is_authenticated and user.is_staff:
-            return User.objects.all()
-        return User.objects.filter(id=user.id)
+        return User.objects.all()
+
+    def get_permissions(self):
+        if self.action in ['create', 'list', 'retrieve']:
+            return [AllowAny()]
+        return [IsAuthenticated()]
 
     def get_serializer_context(self):
         user = self.request.user
@@ -127,6 +129,15 @@ class UserViewSet(ModelViewSet):
 def send_password_reset_email(request):
     ip = get_client_ip(request)
     device_info = parse_user_agent(request)
+    platform = device_info.get('platform', {})
+    os = device_info.get('os', {})
+    browser = device_info.get('browser', {})
+
+    device_summary = (
+        f"Platform: {platform.get('name', 'Unknown')} {platform.get('version', '')}, "
+        f"OS: {os.get('name', 'Unknown')} {os.get('version', '')}, "
+        f"Browser: {browser.get('name', 'Unknown')} {browser.get('version', '')}"
+    )
     email = request.data.get('email')
     if not email:
         return Response({"error": "Email is required."}, status=status.HTTP_400_BAD_REQUEST)
@@ -143,7 +154,7 @@ def send_password_reset_email(request):
                 "reset_link": reset_link,
                 "time": datetime.now().strftime("%B %d, %Y at %I:%M %p"),
                 "ip": ip,
-                "device": device_info
+                "device": device_summary
             }
         })
         return Response({"message": "Password reset email sent."}, status=status.HTTP_200_OK)
@@ -154,8 +165,8 @@ def send_password_reset_email(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def verify_reset_password_link(request):
-    uid = request.data.get('uid')
-    token = request.data.get('token')
+    uid = request.query_params.get('uid')
+    token = request.query_params.get('token')
 
     try:
         validate_password_reset_link(uid, token)
@@ -169,8 +180,17 @@ def verify_reset_password_link(request):
 def change_password_via_email(request):
     ip = get_client_ip(request)
     device_info = parse_user_agent(request)
-    uid = request.query_params.get('uid')
-    token = request.query_params.get('token')
+    platform = device_info.get('platform', {})
+    os = device_info.get('os', {})
+    browser = device_info.get('browser', {})
+
+    device_summary = (
+        f"Platform: {platform.get('name', 'Unknown')} {platform.get('version', '')}, "
+        f"OS: {os.get('name', 'Unknown')} {os.get('version', '')}, "
+        f"Browser: {browser.get('name', 'Unknown')} {browser.get('version', '')}"
+    )
+    uid = request.data.get('uid')
+    token = request.data.get('token')
     password = request.data.get('password')
     if not password:
         return Response({"error": "Password is required."}, status=status.HTTP_400_BAD_REQUEST)
@@ -190,7 +210,7 @@ def change_password_via_email(request):
                     "username": user.username,
                     "time": datetime.now().strftime("%B %d, %Y at %I:%M %p"),
                     "ip": ip,
-                    "device": device_info
+                    "device": device_summary
                 }
             })
             return Response({"message": "Password changed successfully."}, status=status.HTTP_200_OK)
