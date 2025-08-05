@@ -31,7 +31,7 @@ from alx_project_nexus import settings
 from .schema import schema
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('admin/', admin.site.urls, name='admin'),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
@@ -41,13 +41,13 @@ urlpatterns = [
     path("graphql/", csrf_exempt(FileUploadGraphQLView.as_view(graphiql=True, schema=schema))),
 
 ]
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
     import debug_toolbar
     from drf_yasg.views import get_schema_view
     from drf_yasg import openapi
 
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     schema_view = get_schema_view(
         openapi.Info(
             title="ZNAR MOVIE DB",

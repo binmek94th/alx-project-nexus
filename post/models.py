@@ -33,7 +33,7 @@ class Post(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     caption = models.TextField()
     author = models.ForeignKey('user.User', on_delete=models.CASCADE, related_name='posts')
-    image = models.ImageField(upload_to='image/posts')
+    image = models.ImageField(upload_to='posts')
     hashtags = models.ManyToManyField(Hashtag, related_name='posts')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -55,7 +55,7 @@ class Story(models.Model):
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     caption = models.TextField()
-    image = models.ImageField(upload_to='image/stories/')
+    image = models.ImageField(upload_to='stories/')
     author = models.ForeignKey('user.User', on_delete=models.CASCADE, related_name='stories')
     hashtags = models.ManyToManyField(Hashtag, related_name='story')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -126,3 +126,39 @@ class Comment(models.Model):
     class Meta:
         ordering = ['-created_at']
         verbose_name = 'Comment'
+
+
+class View(models.Model):
+    """
+    Represents a view on a post by a user.
+    Each view has a unique identifier, a reference to the post it belongs to,
+    a reference to the user who viewed the post, and a timestamp for when the view was created.
+    The unique_together constraint ensures that a user can only view a post once.
+    The Meta class specifies the ordering of views by creation date in descending order.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='views')
+    user = models.ForeignKey('user.User', on_delete=models.CASCADE, related_name='views')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('post', 'user')
+        ordering = ['-created_at']
+
+
+class StoryView(models.Model):
+    """
+    Represents a view on a story by a user.
+    Each view has a unique identifier, a reference to the story it belongs to,
+    a reference to the user who viewed the story, and a timestamp for when the view was created.
+    The unique_together constraint ensures that a user can only view a story once.
+    The Meta class specifies the ordering of views by creation date in descending order.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    story = models.ForeignKey(Story, on_delete=models.CASCADE, related_name='views')
+    user = models.ForeignKey('user.User', on_delete=models.CASCADE, related_name='story_views')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('story', 'user')
+        ordering = ['-created_at']

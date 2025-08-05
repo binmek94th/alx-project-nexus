@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.utils import timezone
 from rest_framework import serializers
 
-from post.models import Post, Hashtag, Like, Comment, Story, StoryLike
+from post.models import Post, Hashtag, Like, Comment, Story, StoryLike, View
 from post.utils.check_toxicity import is_flagged
 from post.utils.hashtags import extract_hashtags
 from user.serializers import UserSerializer
@@ -84,6 +84,13 @@ class PostListSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'author', 'created_at', 'updated_at')
 
 
+class PostViewSerializer(serializers.Serializer):
+    class Meta:
+        model = View
+        fields = ('id', 'post', 'user', 'created_at')
+        read_only_fields = ('id', 'created_at')
+
+
 class StorySerializer(serializers.ModelSerializer):
     """
     Serializer for the Story model.
@@ -158,7 +165,6 @@ class StoryListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Story
         fields = ('id', 'caption', 'author', 'created_at', 'expires_at')
-        read_only_fields = ('id', 'author', 'created_at', 'expires_at')
 
 
 class LikeSerializer(serializers.ModelSerializer):

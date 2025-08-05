@@ -5,9 +5,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from post.models import Post, Comment, Story
+from post.models import Post, Comment, Story, View, StoryView
 from post.serializers import PostSerializer, LikeSerializer, CommentSerializer, CommentListSerializer, StorySerializer, \
-    StoryLikeSerializer, PostListSerializer, StoryListSerializer
+    StoryLikeSerializer, PostListSerializer, StoryListSerializer, PostViewSerializer
 from post.utils.handle_private import generate_like_queryset, generate_comment_queryset
 from post.utils.serialize_comments import build_comment_tree
 from user.models import User, PrivacyChoice
@@ -66,11 +66,24 @@ class PostViewSet(ModelViewSet):
         """
         Custom permission logic to allow only authenticated users to create posts.
         """
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+        if self.action in ['create', 'update', 'partial_update', 'destroy', 'view_post']:
             self.permission_classes = [IsAuthenticated]
         else:
             self.permission_classes = [AllowAny]
         return super().get_permissions()
+
+    @action(detail=True, methods=['post'], url_path='view_post')
+    def view_post(self, request, *args, **kwargs):
+        """
+        Custom action to handle post views.
+        This action creates a View instance for the post being viewed by the authenticated user.
+        It can be accessed via the URL /posts/{pk}/view_post/.
+        It returns the serialized data of the created View instance.
+        """
+        post = self.get_object()
+        view = View.objects.create(post=post, user=request.user)
+        serializer = PostViewSerializer(view)
+        return Response(serializer.data)
 
 
 class StoryViewSet(ModelViewSet):
@@ -143,6 +156,7 @@ class StoryViewSet(ModelViewSet):
         story = self.get_object()
         if story.is_expired:
             return Response({"detail": "This story is expired."}, status=400)
+        StoryView.objects.create(story=story, user=request.user)
         return Response({"image": story.image.url}, status=200)
 
     @action(detail=False, methods=['get'], url_path='expired_stories')
@@ -166,7 +180,7 @@ class BaseLikeViewSet(ModelViewSet):
     ordering = ['-created_at']
 
     def get_queryset(self):
-        content_type = self.request.query_params.get('type')
+        content_type = self.kwargs.get('type')
         content_id = self.request.query_params.get('id')
         user = self.request.user
 
@@ -184,7 +198,7 @@ class BaseLikeViewSet(ModelViewSet):
         return context
 
     def get_serializer_class(self):
-        content_type = self.request.query_params.get('type')
+        content_type = self.kwargs.get('type')
         if content_type == 'post':
             return LikeSerializer
         else:
