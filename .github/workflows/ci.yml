@@ -63,6 +63,8 @@ jobs:
       EMAIL_PORT: 587
       EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
       EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
+      MODEL_API_URL: https://api-inference.huggingface.co/models/unitary/toxic-bert
+      MODEL_API_TOKEN: ${{ secrets.MODEL_API_TOKEN }}
       FRONTEND_URL: http://localhost:3000
       PAGINATION_PER_PAGE: 20
 

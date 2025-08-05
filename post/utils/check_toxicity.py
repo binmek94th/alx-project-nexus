@@ -1,32 +1,34 @@
-from detoxify import Detoxify
+import requests
 
-_detox_model = None
+from alx_project_nexus.settings import MODEL_API_URL
+from alx_project_nexus.settings import MODEL_API_TOKEN
 
 
-def get_detox_model():
-    """
-    caches the detox model
-    :return:
-    """
-    global _detox_model
-    if _detox_model is None:
-        _detox_model = Detoxify('original')
-    return _detox_model
-
+TOXIC_LABELS = {"toxic", "insult", "obscene", "threat", "identity_hate"}
+THRESHOLD = 0.5
 
 def is_flagged(text: str) -> bool:
-    """
-    This method checks if a text is flagged.
-    it uses detoxify to determine if the text is flagged.
-    it returns True if the text is flagged.
-    it returns False if the text is not flagged.
-    :param text:
-    :return:
-    """
     try:
-        model = get_detox_model()
-        scores = model.predict(text)
-        return scores['toxicity'] > 0.7
-    except Exception as e:
-        print(f"Detoxify error: {e}")
+        response = make_request(text)
+        predictions = response[0]
+
+        for pred in predictions:
+            label = pred["label"]
+            score = pred["score"]
+            if label in TOXIC_LABELS and score >= THRESHOLD:
+                return True
+
         return False
+    except Exception as e:
+        print(f"Error in is_flagged: {e}")
+        return False
+
+
+def make_request(text: str):
+    headers = {
+        "Authorization": f"Bearer {MODEL_API_TOKEN}"
+    }
+
+    response = requests.post(MODEL_API_URL, headers=headers, json={"inputs": text})
+    response.raise_for_status()
+    return response.json()
