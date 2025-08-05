@@ -143,7 +143,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-MEDIA_ROOT = BASE_DIR / 'image'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'image')
 MEDIA_URL = '/image/'
 
 # Default primary key field type
@@ -175,6 +175,7 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': False,
+    # "AUTH_HEADER_TYPES": ("JWT",),
 }
 
 PAGINATION_PER_PAGE = env('PAGINATION_PER_PAGE', default=20, cast=int)
@@ -191,6 +192,8 @@ EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 EMAIL_RATE_LIMIT_WINDOW = env('EMAIL_RATE_LIMIT_WINDOW', default=600, cast=int)
 EMAIL_RATE_LIMIT_MAX = env('EMAIL_RATE_LIMIT_MAX', default=10, cast=int)
 
+MODEL_API_URL = env('MODEL_API_URL', default='http://localhost:8000/api/v1')
+MODEL_API_TOKEN = env('MODEL_API_TOKEN', default='')
 
 CHANNEL_LAYERS = {
     "default": {
@@ -201,6 +204,18 @@ CHANNEL_LAYERS = {
     },
 }
 
+GRAPHENE = {
+    "SCHEMA": "alx_project_nexus.schema.schema",
+    "MIDDLEWARE": [
+        "graphql_jwt.middleware.JSONWebTokenMiddleware",
+    ],
+}
+
+AUTHENTICATION_BACKENDS = [
+    "graphql_jwt.backends.JSONWebTokenBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+
 # CACHEOPS_REDIS = {
 #     'host': 'localhost',
 #     'port': 6379,
@@ -208,25 +223,16 @@ CHANNEL_LAYERS = {
 # }
 #
 # CACHEOPS = {
-#     'contentDB.genre': {'ops': 'all', 'timeout': 60*5},
-#     'contentDB.production': {'ops': 'all', 'timeout': 60*5},
-#     'contentDB.content': {'ops': 'all', 'timeout': 60*5},
-#     'contentDB.language': {'ops': 'all', 'timeout': 60*5},
-#     'contentDB.tags': {'ops': 'all', 'timeout': 60*5},
-#     'contentDB.theme': {'ops': 'all', 'timeout': 60*5},
-#     'contentDB.role': {'ops': 'all', 'timeout': 60*5},
-#     'contentDB.star': {'ops': 'all', 'timeout': 60*5},
-#     'contentDB.series': {'ops': 'all', 'timeout': 60*5},
-#     'contentDB.episode': {'ops': 'all', 'timeout': 60*5},
-#     'contentDB.sequel': {'ops': 'all', 'timeout': 60*5},
-#     'contentDB.contentrole': {'ops': 'all', 'timeout': 60*5},
-#     'contentDB.theatremovies': {'ops': 'all', 'timeout': 60*5},
-#     'contentDB.theatre': {'ops': 'all', 'timeout': 60*5},
-#     'award.awardcategory': {'ops': 'all', 'timeout': 60*5},
-#     'award.awardevent': {'ops': 'all', 'timeout': 60*5},
-#     'award.award': {'ops': 'all', 'timeout': 60*5},
-#     'person.person': {'ops': 'all', 'timeout': 60*5},
-#     'news.newspost': {'ops': 'all', 'timeout': 60*5},
+#     'notification.notification': {'ops': 'all', 'timeout': 60*5},
+#     'post.hasttag': {'ops': 'all', 'timeout': 60*5},
+#     'post.post': {'ops': 'all', 'timeout': 60*5},
+#     'post.story': {'ops': 'all', 'timeout': 60*5},
+#     'post.like': {'ops': 'all', 'timeout': 60*5},
+#     'post.storylike': {'ops': 'all', 'timeout': 60*5},
+#     'post.comment': {'ops': 'all', 'timeout': 60*5},
+#     'user.user': {'ops': 'all', 'timeout': 60*5},
+#     'user.follow': {'ops': 'all', 'timeout': 60*5},
+#     'user.followrequest': {'ops': 'all', 'timeout': 60*5},
 # }
 
 SWAGGER_USE_COMPAT_RENDERERS = False

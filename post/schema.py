@@ -11,7 +11,7 @@ from graphene_django.filter import DjangoFilterConnectionField
 from graphene_file_upload.scalars import Upload
 from graphql import GraphQLError
 
-from .models import Post, Like, Comment, Story
+from .models import Post, Like, Comment, Story, View
 from user.models import User, PrivacyChoice
 
 
@@ -22,7 +22,7 @@ class PostFilterSet(django_filters.FilterSet):
     """
     class Meta:
         model = Post
-        fields = ['author', 'created_at']
+        fields = ['author', 'created_at', 'caption']
 
 
 class StoryFilterSet(django_filters.FilterSet):
@@ -58,11 +58,14 @@ class PostType(DjangoObjectType):
     like_count = graphene.Int()
     comment_count = graphene.Int()
     author = graphene.Field(UserType)
+    view_count = graphene.Int()
+    is_following_author = graphene.Boolean()
+    liked = graphene.Boolean()
 
     class Meta:
         model = Post
         interfaces = (relay.Node,)
-        fields = ("id", "caption", "author", "created_at")
+        fields = ("id", "caption", "author", "created_at", 'image', 'like_count', 'comment_count')
 
     def resolve_like_count(self, info):
         return Like.objects.filter(post_id=self.id).count()
@@ -72,6 +75,23 @@ class PostType(DjangoObjectType):
 
     def resolve_author(self, info):
         return self.author
+
+    def resolve_view_count(self, info):
+        return View.objects.filter(post_id=self.id).count()
+
+    def resolve_is_following_author(self, info):
+        user = info.context.user
+        if not user.is_authenticated:
+            return False
+
+        return self.author.followers.filter(follower=user).exists()
+
+    def resolve_liked(self, info):
+        user = info.context.user
+        if not user.is_authenticated:
+            return False
+
+        return Like.objects.filter(post_id=self.id, user=user).exists()
 
 
 class PostInput(graphene.InputObjectType):
@@ -102,7 +122,7 @@ class UpdatePost(graphene.Mutation):
     class Arguments:
         id = graphene.ID(required=True)
         caption = graphene.String(required=False)
-        image = Upload(required=False)  # only if using file upload
+        image = Upload(required=False)
 
     post = graphene.Field(PostType)
 
@@ -177,9 +197,14 @@ class Query(graphene.ObjectType):
         if user.is_authenticated:
             base_filter |= Q(author__in=User.objects.filter(followers__follower=user))
 
-        return Post.objects.select_related('author').filter(
+        queryset = Post.objects.select_related('author').filter(
             Q(is_deleted=False) & base_filter
         )
+
+        if user.is_authenticated:
+            queryset = queryset.exclude(author=user)
+
+        return queryset.order_by('-created_at')
 
     def resolve_all_stories(root, info, **kwargs):
         user = info.context.user
