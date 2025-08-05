@@ -27,6 +27,7 @@ django-celery-beat~=2.5.0
 # GraphQL
 graphene-django~=3.2.3
 graphene-file-upload
+django-graphql-jwt
 
 
 # Channels & WebSockets
@@ -38,8 +39,8 @@ daphne==4.1.2
 # Others
 httpagentparser~=1.9.5
 django-mptt~=0.14.0
-detoxify~=0.5.2
 pillow
+requests~=2.31.0
 
 # Development & Testing
 django-debug-toolbar~=4.3.0
