@@ -174,20 +174,16 @@ class StoryViewSet(ModelViewSet):
         return Response(serializer.data)
 
 
-class BaseLikeViewSet(ModelViewSet):
-    serializer_class = LikeSerializer
+class StoryLikeViewSet(ModelViewSet):
+    serializer_class = StoryLikeSerializer
     pagination_class = CursorSetPagination
     ordering = ['-created_at']
 
     def get_queryset(self):
-        content_type = self.kwargs.get('type')
         content_id = self.request.query_params.get('id')
         user = self.request.user
 
-        if not content_type or content_type not in ['post', 'story']:
-            raise ValidationError("Missing or invalid 'type' parameter. Must be 'post' or 'story'.")
-
-        return generate_like_queryset(content_type, content_id, user)
+        return generate_like_queryset("story", content_id, user)
 
     def perform_update(self, serializer):
         raise NotImplementedError
@@ -197,12 +193,35 @@ class BaseLikeViewSet(ModelViewSet):
         context['user'] = self.request.user
         return context
 
-    def get_serializer_class(self):
-        content_type = self.kwargs.get('type')
-        if content_type == 'post':
-            return LikeSerializer
+    def get_permissions(self):
+        """
+        Custom permission logic to allow only authenticated users to create posts.
+        """
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            self.permission_classes = [IsAuthenticated]
         else:
-            return StoryLikeSerializer
+            self.permission_classes = [AllowAny]
+        return super().get_permissions()
+
+
+class LikeViewSet(ModelViewSet):
+    serializer_class = LikeSerializer
+    pagination_class = CursorSetPagination
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        content_id = self.request.query_params.get('id')
+        user = self.request.user
+
+        return generate_like_queryset("post", content_id, user)
+
+    def perform_update(self, serializer):
+        raise NotImplementedError
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['user'] = self.request.user
+        return context
 
     def get_permissions(self):
         """
