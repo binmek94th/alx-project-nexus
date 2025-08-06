@@ -65,6 +65,17 @@ class UserEmailSerializer(serializers.ModelSerializer):
         raise ValueError("This account already using this email.")
 
 
+class SimpleUserSerializer(serializers.ModelSerializer):
+    """
+    Serializer for a simple representation of a user.
+    This serializer is used to represent basic user information such as id, username, and profile picture.
+    It is used in nested serializers where only basic user information is needed.
+    """
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'profile_picture')
+
+
 class FollowingSerializer(serializers.ModelSerializer):
     """
     Serializer for the Following model.

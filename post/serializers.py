@@ -6,7 +6,7 @@ from rest_framework import serializers
 from post.models import Post, Hashtag, Like, Comment, Story, StoryLike, View
 from post.utils.check_toxicity import is_flagged
 from post.utils.hashtags import extract_hashtags
-from user.serializers import UserSerializer
+from user.serializers import UserSerializer, SimpleUserSerializer
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -241,10 +241,11 @@ class CommentListSerializer(serializers.ModelSerializer):
     The get_children method uses the CommentListSerializer to serialize child comments.
     """
     children = serializers.SerializerMethodField()
+    user = SimpleUserSerializer(read_only=True)
 
     class Meta:
         model = Comment
-        fields = ('id', 'post', 'created_at', 'content', 'comment', 'children')
+        fields = ('id', 'post', 'created_at', 'content', 'comment', 'children', 'user')
         read_only_fields = ['id', 'created_at']
 
     def get_children(self, obj):

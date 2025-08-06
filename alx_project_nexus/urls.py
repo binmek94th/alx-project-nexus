@@ -50,7 +50,7 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     schema_view = get_schema_view(
         openapi.Info(
-            title="ZNAR MOVIE DB",
+            title="ALX PROJECT NEXUS API",
             default_version='v1',
             description="API documentation",
             terms_of_service="https://www.google.com/policies/terms/",
