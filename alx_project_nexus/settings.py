@@ -53,7 +53,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'django_celery_beat',
     'graphene_django',
-    'graphql_jwt'
+    'graphql_jwt',
     'corsheaders',
     'user',
     'post',
