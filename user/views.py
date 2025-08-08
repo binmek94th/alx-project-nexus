@@ -34,10 +34,15 @@ class UserViewSet(ModelViewSet):
     ordering = ['username']
 
     def get_queryset(self):
+        user = self.request.user
+        if user.is_authenticated and (user.is_staff or user.is_superuser):
+            return User.objects.all()
+        elif user.is_authenticated:
+            return User.objects.filter(id=user.id)
         return User.objects.all()
 
     def get_permissions(self):
-        if self.action in ['create', 'list', 'retrieve']:
+        if self.action in ['create']:
             return [AllowAny()]
         return [IsAuthenticated()]
 
@@ -68,6 +73,17 @@ class UserViewSet(ModelViewSet):
         send_email_service(message)
         channel = f"user_{instance.id}_emails"
         redis_client.publish(channel, json.dumps(message))
+
+    @action(detail=False, methods=['get'], url_path='current_user')
+    def get_current_user(self, request, *args, **kwargs):
+        """
+        Retrieve the current authenticated user.
+        This action returns the details of the currently authenticated user.
+        """
+        user = self.request.user
+        if not user.is_authenticated:
+            raise ValidationError("Authentication credentials were not provided.")
+        return Response(UserSerializer(user).data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['put', 'patch'], url_path='update-password')
     def update_password(self, request, *args, **kwargs):
@@ -201,6 +217,7 @@ def change_password_via_email(request):
             user_id = urlsafe_base64_decode(uid).decode()
             user = User.objects.get(pk=user_id)
             user.set_password(password)
+            user.is_active = True
             user.save()
             send_email_service({
                 "recipient_list": [user.email],

@@ -1,6 +1,6 @@
 from django.db.models import Q
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
+from rest_framework import filters
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
@@ -26,6 +26,8 @@ class PostViewSet(ModelViewSet):
     queryset = Post.objects.filter(is_deleted=False)
     serializer_class = PostSerializer
     pagination_class = CursorSetPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['caption', 'hashtags__name']
 
     ordering = ['-created_at']
 

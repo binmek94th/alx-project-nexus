@@ -118,12 +118,17 @@ class FollowingListSerializer(serializers.ModelSerializer):
     Serializer for listing followers and following users.
     This serializer is used to represent the list of users that a user is following or who are following them.
     """
-    following = UserSerializer(read_only=True)
+    following = SimpleUserSerializer(read_only=True)
 
     class Meta:
         model = Follow
         fields = ['id', 'following', 'created_at']
         read_only_fields = ['created_at']
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        following_data = rep.pop("following", {})
+        return {**rep, "user_id": following_data['id'], "id": rep['id'], **following_data}
 
 
 class FollowerListSerializer(serializers.ModelSerializer):
@@ -137,6 +142,11 @@ class FollowerListSerializer(serializers.ModelSerializer):
         model = Follow
         fields = ['id', 'follower', 'created_at']
         read_only_fields = ['created_at']
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        follower_data = rep.pop("follower", {})
+        return {**rep, "user_id": follower_data['id'], "id": rep['id'], **follower_data}
 
 
 class FollowRequestSerializer(serializers.ModelSerializer):

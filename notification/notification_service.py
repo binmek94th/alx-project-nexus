@@ -36,7 +36,7 @@ def get_notifications(user_id):
     from notification.models import Notification
     from notification.serializers import NotificationSerializer
 
-    notifications = Notification.objects.filter(user_id=user_id).filter(is_read=False).order_by('-created_at')
+    notifications = Notification.objects.filter(user_id=user_id).order_by('-created_at')
     serializer = NotificationSerializer(notifications, many=True)
 
     data = serializer.data
