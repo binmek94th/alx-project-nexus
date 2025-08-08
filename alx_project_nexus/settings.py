@@ -211,29 +211,24 @@ GRAPHENE = {
     ],
 }
 
-AUTHENTICATION_BACKENDS = [
-    "graphql_jwt.backends.JSONWebTokenBackend",
-    "django.contrib.auth.backends.ModelBackend",
-]
+CACHEOPS_REDIS = {
+    'host': 'localhost',
+    'port': 6379,
+    'db': 2,
+}
 
-# CACHEOPS_REDIS = {
-#     'host': 'localhost',
-#     'port': 6379,
-#     'db': 2,
-# }
-#
-# CACHEOPS = {
-#     'notification.notification': {'ops': 'all', 'timeout': 60*5},
-#     'post.hasttag': {'ops': 'all', 'timeout': 60*5},
-#     'post.post': {'ops': 'all', 'timeout': 60*5},
-#     'post.story': {'ops': 'all', 'timeout': 60*5},
-#     'post.like': {'ops': 'all', 'timeout': 60*5},
-#     'post.storylike': {'ops': 'all', 'timeout': 60*5},
-#     'post.comment': {'ops': 'all', 'timeout': 60*5},
-#     'user.user': {'ops': 'all', 'timeout': 60*5},
-#     'user.follow': {'ops': 'all', 'timeout': 60*5},
-#     'user.followrequest': {'ops': 'all', 'timeout': 60*5},
-# }
+CACHEOPS = {
+    'notification.notification': {'ops': 'all', 'timeout': 60*5},
+    'post.hasttag': {'ops': 'all', 'timeout': 60*5},
+    'post.post': {'ops': 'all', 'timeout': 60*5},
+    'post.story': {'ops': 'all', 'timeout': 60*5},
+    'post.like': {'ops': 'all', 'timeout': 60*5},
+    'post.storylike': {'ops': 'all', 'timeout': 60*5},
+    'post.comment': {'ops': 'all', 'timeout': 60*5},
+    'user.user': {'ops': 'all', 'timeout': 60*5},
+    'user.follow': {'ops': 'all', 'timeout': 60*5},
+    'user.followrequest': {'ops': 'all', 'timeout': 60*5},
+}
 
 SWAGGER_USE_COMPAT_RENDERERS = False
 
