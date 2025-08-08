@@ -27,6 +27,7 @@ django-celery-beat~=2.5.0
 # GraphQL
 graphene-django~=3.2.3
 graphene-file-upload
+django-graphql-jwt
 
 
 # Channels & WebSockets
