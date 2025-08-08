@@ -3,10 +3,10 @@ from datetime import timedelta
 from django.utils import timezone
 from rest_framework import serializers
 
-from post.models import Post, Hashtag, Like, Comment, Story, StoryLike, View, StoryView
+from post.models import Post, Hashtag, Like, Comment, Story, StoryLike, View
 from post.utils.check_toxicity import is_flagged
 from post.utils.hashtags import extract_hashtags
-from user.serializers import SimpleUserSerializer
+from user.serializers import UserSerializer, SimpleUserSerializer
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -76,7 +76,7 @@ class PostListSerializer(serializers.ModelSerializer):
     The read_only_fields are set to ensure that certain fields cannot be modified
     when creating or updating a post.
     """
-    author = SimpleUserSerializer(read_only=True)
+    author = UserSerializer(read_only=True)
 
     class Meta:
         model = Post
@@ -160,21 +160,11 @@ class StoryListSerializer(serializers.ModelSerializer):
     The read_only_fields are set to ensure that certain fields cannot be modified
     when creating or updating a story.
     """
-    author = SimpleUserSerializer(read_only=True)
-    viewed = serializers.SerializerMethodField()
+    author = UserSerializer(read_only=True)
 
     class Meta:
         model = Story
-        fields = ('id', 'caption', 'author', 'created_at', 'expires_at', "viewed")
-
-    def get_viewed(self, obj):
-        """
-        Returns a boolean indicating whether the story has been viewed by the current user.
-        """
-        user = self.context.get('user')
-        if user:
-            return StoryView.objects.filter(user=user).exists()
-        return False
+        fields = ('id', 'caption', 'author', 'created_at', 'expires_at')
 
 
 class LikeSerializer(serializers.ModelSerializer):
