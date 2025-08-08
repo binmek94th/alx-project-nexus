@@ -49,3 +49,4 @@ pytest-django~=4.8.0
 # Production & Deployment
 gunicorn~=21.2.0
 uvicorn
+websockets
