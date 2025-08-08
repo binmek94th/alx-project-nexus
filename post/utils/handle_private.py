@@ -91,9 +91,8 @@ def generate_comment_queryset(post_id, user) -> QuerySet:
         if check_owner(post.author, user):
             return Comment.objects.filter(post=post_id)
 
-        content = Comment.objects.select_related('user').get(id=post_id)
-        if check_private(content.user, user):
-            if not check_private_allowed(user, content.user.id):
+        if check_private(post.author, user):
+            if not check_private_allowed(user, post.author.id):
                 return Comment.objects.none()
 
         return Comment.objects.select_related('user', 'comment').filter(post=post_id)
