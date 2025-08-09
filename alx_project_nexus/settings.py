@@ -31,7 +31,7 @@ env = environ.Env()
 
 ENV = env('DJANGO_ENV', default='development')
 
-SECRET_KEY = env('SECRET', 'django-insecure-n7inge^7@5!ppk(aom&*&+4%1jv=on0hdxp51!of)0f#e0v+@j')
+SECRET_KEY = env.str('SECRET', default='django-insecure-n7inge^7@5!ppk(aom&*&+4%1jv=on0hdxp51!of)0f#e0v+@j')
 
 DEBUG = env('DEBUG', default=False, cast=bool)
 
