@@ -7,4 +7,4 @@ class IsSenderOrReceiver(BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
-        return request.user == obj.sender or request.user == obj.receiver
+        return request.user and (request.user == obj.sender or request.user == obj.receiver)

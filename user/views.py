@@ -356,7 +356,7 @@ class FollowRequestViewSet(ModelViewSet):
     It allows users to view their pending follow requests and manage them accordingly.
     """
     queryset = FollowRequest.objects.all()
-    permission_classes = [IsAuthenticated | IsSenderOrReceiver]
+    permission_classes = [IsAuthenticated & IsSenderOrReceiver]
     serializer_class = FollowRequestSerializer
     pagination_class = CursorSetPagination
 
